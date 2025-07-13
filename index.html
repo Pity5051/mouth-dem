@@ -1,60 +1,55 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Mouth Overlay Demo</title>
   <style>
     body{margin:0;overflow:hidden}
-    #c{position:fixed;top:0;left:0}
+    #canvas{position:fixed;top:0;left:0}
   </style>
 </head>
 <body>
-  <!-- lienzo donde se dibuja la boca -->
-  <canvas id="c"></canvas>
-
-  <!-- TU FOTO (no cambies el nombre) -->
+  <canvas id="canvas"></canvas>
+  <!-- tu boca — no cambies el nombre -->
   <img id="mouth" src="IMG_3685.png" style="display:none">
 
-  <!-- Libs Mediapipe (versión .min.js) -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.min.js"></script>
+  <!-- Librerías EXACTAS de la doc oficial -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
 
   <script>
-    /* Elementos básicos */
-    const video  = document.createElement('video');
-    const canvas = document.getElementById('c');
-    const ctx    = canvas.getContext('2d');
-    const mouth  = document.getElementById('mouth');
-    let W=640, H=480;
+    const canvas = document.getElementById('canvas'),
+          ctx    = canvas.getContext('2d'),
+          mouth  = document.getElementById('mouth'),
+          video  = document.createElement('video');
+    let W=640, H=480;                 // se actualiza cuando abre la cámara
 
     /* 1. Pide cámara */
-    navigator.mediaDevices.getUserMedia({video:true}).then(s=>{
-      video.srcObject=s; video.play();
-      video.onloadedmetadata=()=>{
-        W=canvas.width  = video.videoWidth;
-        H=canvas.height = video.videoHeight;
-      };
-    });
+    navigator.mediaDevices.getUserMedia({video:true})
+      .then(s=>{
+        video.srcObject=s; video.play();
+        video.onloadedmetadata=()=>{W=canvas.width=video.videoWidth;H=canvas.height=video.videoHeight;};
+      });
 
-    /* 2. Configura FaceMesh y dibuja la boca */
-    const fm=new FaceMesh.FaceMesh({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
-    fm.setOptions({maxNumFaces:1});
-    fm.onResults(r=>{
+    /* 2. Configura FaceMesh (nombre correcto) */
+    const faceMesh = new FaceMesh.FaceMesh({
+      locateFile: f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
+    });
+    faceMesh.setOptions({maxNumFaces:1});
+    faceMesh.onResults(r=>{
       ctx.clearRect(0,0,W,H);
       if(!r.multiFaceLandmarks.length) return;
-      const lm=r.multiFaceLandmarks[0];          // landmarks
-      const top=lm[13], bot=lm[14];              // labio sup/inf
-      const mh=Math.hypot((bot.y-top.y)*H,(bot.x-top.x)*W)*2; // alto
-      const mw=mh*1.4;                           // ancho aprox.
-      const x =top.x*W-mw/2;
-      const y =top.y*H-mh/4;
-      ctx.drawImage(mouth,x,y,mw,mh);
+      const lm=r.multiFaceLandmarks[0],
+            top=lm[13], bot=lm[14],
+            h =Math.hypot((bot.y-top.y)*H,(bot.x-top.x)*W)*2,
+            w =h*1.4,
+            x =top.x*W-w/2,
+            y =top.y*H-h/4;
+      ctx.drawImage(mouth,x,y,w,h);
     });
 
-    /* 3. Inicia cámara + detector */
-    new CameraUtils.Camera(
-      video,{onFrame:async()=>fm.send({image:video})}
-    ).start();
+    /* 3. Conecta cámara + detector (clase Camera global) */
+    new Camera(video,{onFrame:async()=>faceMesh.send({image:video})}).start();
   </script>
 </body>
 </html>
