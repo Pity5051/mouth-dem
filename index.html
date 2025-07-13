@@ -35,7 +35,7 @@
     }).catch(e=>showError('Permiso cámara denegado: '+e));
 
     /* 2. FaceMesh */
-    const fm=new FaceMesh.FaceMesh({locateFile:f=>'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/'+f});
+    const fm=new FaceMesh({locateFile:f=>'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/'+f});
     fm.setOptions({maxNumFaces:1});
     fm.onResults(r=>{
       ctx.clearRect(0,0,W,H);
