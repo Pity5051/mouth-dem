@@ -47,7 +47,7 @@
     });
 
     /* 3. Iniciar cámara+detector */
-    new Camera(video,{onFrame:async()=>fm.send({image:video})}).start();
+    new CameraUtils.Camera(video,{onFrame:async()=>faceMesh.send({image:video})}).start();
 
   }catch(err){
     showError(err);
